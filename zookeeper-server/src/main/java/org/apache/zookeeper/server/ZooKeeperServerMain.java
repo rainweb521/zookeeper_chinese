@@ -42,6 +42,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * This class starts and runs a standalone ZooKeeperServer.
+ *
+ * 这个类用于在独立模式启动zookeeper
  */
 @InterfaceAudience.Public
 public class ZooKeeperServerMain {
@@ -51,26 +53,30 @@ public class ZooKeeperServerMain {
     private static final String USAGE = "Usage: ZooKeeperServerMain configfile | port datadir [ticktime] [maxcnxns]";
 
     // ZooKeeper server supports two kinds of connection: unencrypted and encrypted.
-    private ServerCnxnFactory cnxnFactory;
-    private ServerCnxnFactory secureCnxnFactory;
-    private ContainerManager containerManager;
-    private MetricsProvider metricsProvider;
-    private AdminServer adminServer;
+    private ServerCnxnFactory cnxnFactory;//管理客户端连接
+    private ServerCnxnFactory secureCnxnFactory; //管理加密的客户端连接
+    private ContainerManager containerManager; // zookeeper整体服务
+    private MetricsProvider metricsProvider; //监控服务
+    private AdminServer adminServer; //管理server状态
 
     /*
      * Start up the ZooKeeper server.
      *
      * @param args the configfile or the port datadir [ticktime]
+     * 启动过程与QuorumPeer的一样
      */
     public static void main(String[] args) {
         ZooKeeperServerMain main = new ZooKeeperServerMain();
         try {
+            //加载配置文件
             main.initializeAndRun(args);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {//参数无效
             LOG.error("Invalid arguments, exiting abnormally", e);
             LOG.info(USAGE);
             System.err.println(USAGE);
+            //这里打印审核日志
             ZKAuditProvider.addServerStartFailureAuditLog();
+            //调用系统退出，并添加错误值
             ServiceUtils.requestSystemExit(ExitCode.INVALID_INVOCATION.getValue());
         } catch (ConfigException e) {
             LOG.error("Invalid config, exiting abnormally", e);
@@ -92,24 +98,29 @@ public class ZooKeeperServerMain {
             ZKAuditProvider.addServerStartFailureAuditLog();
             ServiceUtils.requestSystemExit(ExitCode.UNEXPECTED_ERROR.getValue());
         }
+        //正常退出
         LOG.info("Exiting normally");
         ServiceUtils.requestSystemExit(ExitCode.EXECUTION_FINISHED.getValue());
     }
 
     protected void initializeAndRun(String[] args) throws ConfigException, IOException, AdminServerException {
         try {
+            //注册log4j来实现远程日志功能
             ManagedUtil.registerLog4jMBeans();
         } catch (JMException e) {
             LOG.warn("Unable to register log4j JMX control", e);
         }
 
+        //新建一个空的配置文件类
         ServerConfig config = new ServerConfig();
+        //使用启动参数中的配置文件地址
         if (args.length == 1) {
             config.parse(args[0]);
         } else {
             config.parse(args);
         }
 
+        //通过配置文件启动
         runFromConfig(config);
     }
 
@@ -124,6 +135,7 @@ public class ZooKeeperServerMain {
         FileTxnSnapLog txnLog = null;
         try {
             try {
+                //启动监控服务
                 metricsProvider = MetricsProviderBootstrap.startMetricsProvider(
                     config.getMetricsProviderClassName(),
                     config.getMetricsProviderConfiguration());

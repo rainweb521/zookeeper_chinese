@@ -70,7 +70,9 @@ import org.slf4j.LoggerFactory;
  * In addition to the config file. There is a file in the data directory called
  * "myid" that contains the server id as an ASCII decimal value.
  *
+ * 总启动类
  */
+
 @InterfaceAudience.Public
 public class QuorumPeerMain {
 
@@ -78,6 +80,7 @@ public class QuorumPeerMain {
 
     private static final String USAGE = "Usage: QuorumPeerMain configfile";
 
+    //核心内部服务
     protected QuorumPeer quorumPeer;
 
     /**
@@ -88,44 +91,57 @@ public class QuorumPeerMain {
     public static void main(String[] args) {
         QuorumPeerMain main = new QuorumPeerMain();
         try {
+            //验证输入的参数
             main.initializeAndRun(args);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) { //参数无效
             LOG.error("Invalid arguments, exiting abnormally", e);
             LOG.info(USAGE);
             System.err.println(USAGE);
+            //这里打印审核日志
             ZKAuditProvider.addServerStartFailureAuditLog();
+            //调用系统退出，并添加错误值
             ServiceUtils.requestSystemExit(ExitCode.INVALID_INVOCATION.getValue());
-        } catch (ConfigException e) {
+        } catch (ConfigException e) { //配置无效
             LOG.error("Invalid config, exiting abnormally", e);
             System.err.println("Invalid config, exiting abnormally");
             ZKAuditProvider.addServerStartFailureAuditLog();
             ServiceUtils.requestSystemExit(ExitCode.INVALID_INVOCATION.getValue());
-        } catch (DatadirException e) {
+        } catch (DatadirException e) { //无权限访问此目录
             LOG.error("Unable to access datadir, exiting abnormally", e);
             System.err.println("Unable to access datadir, exiting abnormally");
             ZKAuditProvider.addServerStartFailureAuditLog();
             ServiceUtils.requestSystemExit(ExitCode.UNABLE_TO_ACCESS_DATADIR.getValue());
-        } catch (AdminServerException e) {
+        } catch (AdminServerException e) { //AdminServer启动失败
             LOG.error("Unable to start AdminServer, exiting abnormally", e);
             System.err.println("Unable to start AdminServer, exiting abnormally");
             ZKAuditProvider.addServerStartFailureAuditLog();
             ServiceUtils.requestSystemExit(ExitCode.ERROR_STARTING_ADMIN_SERVER.getValue());
-        } catch (Exception e) {
+        } catch (Exception e) { //未知的异常
             LOG.error("Unexpected exception, exiting abnormally", e);
             ZKAuditProvider.addServerStartFailureAuditLog();
             ServiceUtils.requestSystemExit(ExitCode.UNEXPECTED_ERROR.getValue());
         }
+        //正常退出
         LOG.info("Exiting normally");
         ServiceUtils.requestSystemExit(ExitCode.EXECUTION_FINISHED.getValue());
     }
 
+    /**
+     * 初始化配置文件和启动
+     * @param args
+     * @throws ConfigException
+     * @throws IOException
+     * @throws AdminServerException
+     */
     protected void initializeAndRun(String[] args) throws ConfigException, IOException, AdminServerException {
+        //先新建一个配置文件，内部包含许多配置参数
         QuorumPeerConfig config = new QuorumPeerConfig();
+        //如果启动参数只有一个，则进行解析，参数为配置文件地址
         if (args.length == 1) {
             config.parse(args[0]);
         }
 
-        // Start and schedule the the purge task
+        // 启动事务日志和快照的清除任务，这里会创建一个定时器来执行
         DatadirCleanupManager purgeMgr = new DatadirCleanupManager(
             config.getDataDir(),
             config.getDataLogDir(),
@@ -133,9 +149,12 @@ public class QuorumPeerMain {
             config.getPurgeInterval());
         purgeMgr.start();
 
+        //这里判断是单机模式还是分布式集群模式
         if (args.length == 1 && config.isDistributed()) {
+            //以集群模式来启动
             runFromConfig(config);
         } else {
+            //单机模式启动，并将args参数传递
             LOG.warn("Either no config or no quorum defined in config, running in standalone mode");
             // there is only server in the quorum -- run as standalone
             ZooKeeperServerMain.main(args);

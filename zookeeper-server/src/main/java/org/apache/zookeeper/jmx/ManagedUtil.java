@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Shared utilities
+ * 通过使用log4j 中的JMX， 可以方便远程查看日志 和 动态的修改log4j的配置文件。
  */
 public class ManagedUtil {
 

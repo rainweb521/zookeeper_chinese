@@ -24,6 +24,25 @@ import org.apache.zookeeper.server.ServerCnxnFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * zookeeper的审核日志，仅在记录连接了客户端的服务器记录
+ *
+ * 会议:客户会话ID
+ *
+ * 用户:与客户端会话相关联的用户的逗号分隔列表
+ *
+ * ip:客户端IP地址
+ *
+ * 操作:所选的任何一项审核操作。可能的值为（serverStart，serverStop，create，delete，setData，setAcl，multiOperation，reconfig，ephemeralZNodeDeleteOnSessionClose）
+ *
+ * znode: znode的路径
+ *
+ * znode类型:创建操作时znode的类型
+ *
+ * ACL:znode ACL的字符串表示形式，如cdrwa（创建，删除，读取，写入，管理）。仅记录setAcl操作
+ *
+ * 结果:操作结果。可能的值为（成功/失败/调用）。结果“ invoked”用于serverStop操作，因为在确保服务器实际停止之前已记录了stop。
+ */
 public class ZKAuditProvider {
     static final String AUDIT_ENABLE = "zookeeper.audit.enable";
     static final String AUDIT_IMPL_CLASS = "zookeeper.audit.impl.class";

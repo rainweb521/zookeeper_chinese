@@ -51,6 +51,7 @@ public abstract class ServiceUtils {
                 + "Actually System.exit is disabled", code);
     };
 
+    //用于操作系统退出
     private static volatile Consumer<Integer> systemExitProcedure = SYSTEM_EXIT;
 
     /**
