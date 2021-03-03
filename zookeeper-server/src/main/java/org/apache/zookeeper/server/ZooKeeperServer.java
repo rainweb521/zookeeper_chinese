@@ -513,15 +513,18 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         if (zkDb.isInitialized()) {
             setZxid(zkDb.getDataTreeLastProcessedZxid());
         } else {
+            //由于zkDatabase尚未初始化,进入此分支(通过快照和事务日志恢复数据)
             setZxid(zkDb.loadDataBase());
         }
 
         // Clean up dead sessions
+        //清理过期session,删除其对应的node
         zkDb.getSessions().stream()
                         .filter(session -> zkDb.getSessionWithTimeOuts().get(session) == null)
                         .forEach(session -> killSession(session, zkDb.getDataTreeLastProcessedZxid()));
 
         // Make a clean snapshot
+        //做快照
         takeSnapshot();
     }
 
@@ -670,12 +673,18 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         }
     }
 
+    /**
+     * 初始化zkDatabase
+     * @throws IOException
+     * @throws InterruptedException
+     */
     public void startdata() throws IOException, InterruptedException {
         //check to see if zkDb is not null
         if (zkDb == null) {
             zkDb = new ZKDatabase(this.txnLogFactory);
         }
         if (!zkDb.isInitialized()) {
+            //从快照和事务日志中恢复数据
             loadData();
         }
     }

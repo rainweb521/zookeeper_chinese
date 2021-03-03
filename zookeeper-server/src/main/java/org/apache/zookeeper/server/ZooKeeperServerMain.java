@@ -132,59 +132,71 @@ public class ZooKeeperServerMain {
      */
     public void runFromConfig(ServerConfig config) throws IOException, AdminServerException {
         LOG.info("Starting server");
+        //清理事务和快照文件
         FileTxnSnapLog txnLog = null;
         try {
             try {
-                //启动监控服务
+                //配置监控服务
                 metricsProvider = MetricsProviderBootstrap.startMetricsProvider(
                     config.getMetricsProviderClassName(),
                     config.getMetricsProviderConfiguration());
             } catch (MetricsProviderLifeCycleException error) {
                 throw new IOException("Cannot boot MetricsProvider " + config.getMetricsProviderClassName(), error);
             }
+            //初始化监控
             ServerMetrics.metricsProviderInitialized(metricsProvider);
             ProviderRegistry.initialize();
             // Note that this thread isn't going to be doing anything else,
             // so rather than spawning another thread, we will just call
             // run() in this thread.
             // create a file logger url from the command line args
+            //配置路径
             txnLog = new FileTxnSnapLog(config.dataLogDir, config.dataDir);
+            //创建jvm监控类
             JvmPauseMonitor jvmPauseMonitor = null;
             if (config.jvmPauseMonitorToRun) {
                 jvmPauseMonitor = new JvmPauseMonitor(config);
             }
+            //创建server类
             final ZooKeeperServer zkServer = new ZooKeeperServer(jvmPauseMonitor, txnLog, config.tickTime, config.minSessionTimeout, config.maxSessionTimeout, config.listenBacklog, null, config.initialConfig);
             txnLog.setServerStats(zkServer.serverStats());
 
             // Registers shutdown handler which will be used to know the
             // server error or shutdown state changes.
+            //因为当前为独立模式，当有一个线程完成后，表示程序结束
             final CountDownLatch shutdownLatch = new CountDownLatch(1);
             zkServer.registerServerShutdownHandler(new ZooKeeperServerShutdownHandler(shutdownLatch));
 
             // Start Admin server
+            //adminServer配置，并启动
             adminServer = AdminServerFactory.createAdminServer();
             adminServer.setZooKeeperServer(zkServer);
             adminServer.start();
 
+            //needStartZKServer用来判断在普通会话管理器还是加密会话管理器来启动zk
             boolean needStartZKServer = true;
             if (config.getClientPortAddress() != null) {
+                //配置启动会话管理器
                 cnxnFactory = ServerCnxnFactory.createFactory();
                 cnxnFactory.configure(config.getClientPortAddress(), config.getMaxClientCnxns(), config.getClientPortListenBacklog(), false);
+                //此方法除了启动ServerCnxnFactory,还会启动ZooKeeper
                 cnxnFactory.startup(zkServer);
                 // zkServer has been started. So we don't need to start it again in secureCnxnFactory.
                 needStartZKServer = false;
             }
             if (config.getSecureClientPortAddress() != null) {
+                //启动加密类型的会话管理器
                 secureCnxnFactory = ServerCnxnFactory.createFactory();
                 secureCnxnFactory.configure(config.getSecureClientPortAddress(), config.getMaxClientCnxns(), config.getClientPortListenBacklog(), true);
                 secureCnxnFactory.startup(zkServer, needStartZKServer);
             }
 
+            //创建容器节点，类似于管理持久节点,持久顺序节点,临时节点,临时顺序节点
             containerManager = new ContainerManager(
                 zkServer.getZKDatabase(),
                 zkServer.firstProcessor,
-                Integer.getInteger("znode.container.checkIntervalMs", (int) TimeUnit.MINUTES.toMillis(1)),
-                Integer.getInteger("znode.container.maxPerMinute", 10000),
+                Integer.getInteger("znode.container.checkIntervalMs", (int) TimeUnit.MINUTES.toMillis(1)),//执行两次检查任务之间的时间间隔,单位:ms,默认1min
+                Integer.getInteger("znode.container.maxPerMinute", 10000), //	一分钟内最多删除多少个容器节点,即删除两个容器节点之间的最少时间间隔为60000/10000=6ms
                 Long.getLong("znode.container.maxNeverUsedIntervalMs", 0)
             );
             containerManager.start();
@@ -192,6 +204,7 @@ public class ZooKeeperServerMain {
 
             // Watch status of ZooKeeper server. It will do a graceful shutdown
             // if the server is not running or hits an internal error.
+            //这里启动后等待主线程的执行，服务器正常启动时,运行到此处阻塞,只有server的state变为ERROR或SHUTDOWN时继续运行后面的代码
             shutdownLatch.await();
 
             shutdown();

@@ -25,6 +25,8 @@ import org.apache.zookeeper.server.ZooKeeperServer;
  * Interface for an embedded admin server that runs Commands. There is only one
  * functional implementation, JettyAdminServer. DummyAdminServer, which does
  * nothing, is used when we do not wish to run a server.
+ * jetty的嵌入式服务器，默认开启，端口就是8080，可以查看许多zk的状态信息，数据信息，配置信息
+ * AdminServer是3.5.0之后支持的特性,启动了一个jettyserver,默认端口是8080,访问此端口可以获取Zookeeper运行时的相关信息:
  */
 @InterfaceAudience.Public
 public interface AdminServer {

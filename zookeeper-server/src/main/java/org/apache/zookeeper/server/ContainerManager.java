@@ -48,6 +48,7 @@ public class ContainerManager {
     private final int checkIntervalMs;
     private final int maxPerMinute;
     private final long maxNeverUsedIntervalMs;
+    //通过timer来执行定时任务
     private final Timer timer;
     private final AtomicReference<TimerTask> task = new AtomicReference<TimerTask>(null);
 
@@ -125,7 +126,9 @@ public class ContainerManager {
      * Manually check the containers. Not normally used directly
      */
     public void checkContainers() throws InterruptedException {
+        //删除两个容器节点之间的最小间隔,默认:6ms
         long minIntervalMs = getMinIntervalMs();
+        //遍历待删除的容器节点(同时会删除过期的TTL节点)
         for (String containerPath : getCandidates()) {
             long startMs = Time.currentElapsedTime();
 
@@ -133,13 +136,16 @@ public class ContainerManager {
             Request request = new Request(null, 0, 0, ZooDefs.OpCode.deleteContainer, path, null);
             try {
                 LOG.info("Attempting to delete candidate container: {}", containerPath);
+                //调用删除请求
                 postDeleteRequest(request);
             } catch (Exception e) {
                 LOG.error("Could not delete container: {}", containerPath, e);
             }
-
+            //计算删除一个容器节点所需时间
             long elapsedMs = Time.currentElapsedTime() - startMs;
             long waitMs = minIntervalMs - elapsedMs;
+            //若删除一个容器节点所需时间小于minIntervalMs,线程sleep.
+            // 由于Timer内部只有一个线程,因此可以保证删除两个容器节点之间的时间间隔至少是minIntervalMs
             if (waitMs > 0) {
                 Thread.sleep(waitMs);
             }
@@ -147,6 +153,7 @@ public class ContainerManager {
     }
 
     // VisibleForTesting
+    ////只是将删除节点的请求发送给PrepRequestProcessor,并未真正删除该节点
     protected void postDeleteRequest(Request request) throws RequestProcessor.RequestProcessorException {
         requestProcessor.processRequest(request);
     }

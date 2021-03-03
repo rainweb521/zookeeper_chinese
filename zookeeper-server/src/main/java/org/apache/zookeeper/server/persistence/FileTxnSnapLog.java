@@ -120,6 +120,8 @@ public class FileTxnSnapLog {
         boolean enableAutocreate = Boolean.parseBoolean(
             System.getProperty(ZOOKEEPER_DATADIR_AUTOCREATE, ZOOKEEPER_DATADIR_AUTOCREATE_DEFAULT));
 
+        //zookeeper.snapshot.trust.empty : false
+        // 此属性控制 ZooKeeper 是否应将丢失的快照文件视为致命文件无法恢复的状态。设置为 true 允许 ZooKeeper 服务器在没有快照文件的情况下恢复
         trustEmptySnapshot = Boolean.getBoolean(ZOOKEEPER_SNAPSHOT_TRUST_EMPTY);
         LOG.info("{} : {}", ZOOKEEPER_SNAPSHOT_TRUST_EMPTY, trustEmptySnapshot);
 

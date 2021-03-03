@@ -42,6 +42,9 @@ import org.slf4j.LoggerFactory;
  * than its target time, it implies that the JVM or host machine has
  * paused processing, which may cause other problems. If such a pause is
  * detected, the thread logs a message.
+ * JMX的全称为Java Management Extensions
+ * 顾名思义，是管理Java的一种扩展。这种机制可以方便的管理、监控正在运行中的Java程序。
+ * 常用于管理线程，内存，日志Level，服务重启，系统环境等
  */
 public class JvmPauseMonitor {
 

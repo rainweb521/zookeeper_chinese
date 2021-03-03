@@ -42,6 +42,11 @@ import org.slf4j.LoggerFactory;
  *     a given session must be processed in order.
  * ExecutorService provides queue management and thread restarting, so it's
  * useful even with a single thread.
+ *
+ * workerService管理一组worker thread线程，有两种管理模式
+ *
+ * 可指定线程模式	将任务指定由某一线程完成,若一系列任务需有序完成,可使用此种模式,将需按序完成的任务指定到同一线程	同一会话下的一系列请求	生成N个ExecutorService,每个ExecutorService只包含一个线程
+ * 不可指定线程模式	任务提交后,由WorkerService随机指定线程完成,任务之间无顺序要求则使用该模式	执行网络IO	生成1个ExecutorService,其中有N个线程
  */
 public class WorkerService {
 
@@ -106,6 +111,7 @@ public class WorkerService {
      * assignment is a single mod operation on the number of threads.  If a
      * worker thread pool is not being used, work is done directly by
      * this thread.
+     *
      */
     public void schedule(WorkRequest workRequest, long id) {
         if (stopped) {
@@ -121,6 +127,7 @@ public class WorkerService {
         if (size > 0) {
             try {
                 // make sure to map negative ids as well to [0, size-1]
+                //根据id取模将workRequest分配给对应的线程
                 int workerNum = ((int) (id % size) + size) % size;
                 ExecutorService worker = workers.get(workerNum);
                 worker.execute(scheduledWorkRequest);
@@ -129,6 +136,8 @@ public class WorkerService {
                 workRequest.cleanup();
             }
         } else {
+            //如果没有使用worker thread
+            //(即numWorkerThreads=0),则启动ScheduledWorkRequest线程完成任务,当前线程阻塞到任务完成.
             // When there is no worker thread pool, do the work directly
             // and wait for its completion
             scheduledWorkRequest.run();

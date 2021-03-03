@@ -37,6 +37,12 @@ import org.apache.zookeeper.server.auth.SaslServerCallbackHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ *ServerCnxnFactory是Zookeeper中的重要组件,负责处理客户端与服务器的连接。
+ * 主要有两个实现,一个是NIOServerCnxnFactory,使用Java原生NIO处理网络IO事件;
+ * 另一个是NettyServerCnxnFactory,使用Netty处理网络IO事件.作为处理客户端连接的组件,
+ * 其会启动若干线程监听客户端连接端口(即默认的9876端口)
+ */
 public abstract class ServerCnxnFactory {
 
     public static final String ZOOKEEPER_SERVER_CNXN_FACTORY = "zookeeper.serverCnxnFactory";
