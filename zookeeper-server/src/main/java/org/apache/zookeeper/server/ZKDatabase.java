@@ -280,9 +280,11 @@ public class ZKDatabase {
      * the transactions to the committedlog in memory.
      * @return the last valid zxid on disk
      * @throws IOException
+     * 加载数据
      */
     public long loadDataBase() throws IOException {
         long startTime = Time.currentElapsedTime();
+        //获取最后的zxid事务ID
         long zxid = snapLog.restore(dataTree, sessionsWithTimeouts, commitProposalPlaybackListener);
         initialized = true;
         long loadTime = Time.currentElapsedTime() - startTime;

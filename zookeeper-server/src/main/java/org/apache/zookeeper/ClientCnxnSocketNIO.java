@@ -64,12 +64,14 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
     /**
      * @throws InterruptedException
      * @throws IOException
+     * 读写操作实现
      */
     void doIO(Queue<Packet> pendingQueue, ClientCnxn cnxn) throws InterruptedException, IOException {
         SocketChannel sock = (SocketChannel) sockKey.channel();
         if (sock == null) {
             throw new IOException("Socket is null!");
         }
+        //读数据处理
         if (sockKey.isReadable()) {
             int rc = sock.read(incomingBuffer);
             if (rc < 0) {
@@ -95,6 +97,7 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
                     updateLastHeard();
                     initialized = true;
                 } else {
+                    //读取响应数据
                     sendThread.readResponse(incomingBuffer);
                     lenBuffer.clear();
                     incomingBuffer = lenBuffer;
@@ -102,6 +105,8 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
                 }
             }
         }
+
+        //写数据
         if (sockKey.isWritable()) {
             Packet p = findSendablePacket(outgoingQueue, sendThread.tunnelAuthInProgress());
 
@@ -116,6 +121,7 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
                     }
                     p.createBB();
                 }
+                // 向服务端写消息
                 sock.write(p.bb);
                 if (!p.bb.hasRemaining()) {
                     sentCount.getAndIncrement();
@@ -263,10 +269,12 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
         }
     }
 
+    //使用套接字建立远程连接，客户端连接
     @Override
     void connect(InetSocketAddress addr) throws IOException {
         SocketChannel sock = createSock();
         try {
+            // 往 Selector 注册 SocketChannel，注册的 key 为 SelectionKey.OP_CONNECT
             registerAndConnect(sock, addr);
         } catch (UnresolvedAddressException | UnsupportedAddressTypeException | SecurityException | IOException e) {
             LOG.error("Unable to open socket to {}", addr);

@@ -32,6 +32,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -191,6 +193,7 @@ public class ZooKeeperMain {
          * Breaks a string into command + arguments.
          * @param cmdstring string of form "cmd arg1 arg2..etc"
          * @return true if parsing succeeded.
+         * 解析命令，赋值给command
          */
         public boolean parseCommand(String cmdstring) {
             Matcher matcher = ARGS_PATTERN.matcher(cmdstring);

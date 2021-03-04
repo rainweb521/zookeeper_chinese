@@ -100,7 +100,9 @@ import org.slf4j.MDC;
  * This class manages the socket i/o for the client. ClientCnxn maintains a list
  * of available servers to connect to and "transparently" switches servers it is
  * connected to as needed.
+ * 客户端连接对象
  *
+ * https://blog.csdn.net/henlf/article/details/83716449?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.baidujs&dist_request_id=&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.baidujs
  */
 @SuppressFBWarnings({"EI_EXPOSE_REP", "EI_EXPOSE_REP2"})
 public class ClientCnxn {
@@ -144,11 +146,13 @@ public class ClientCnxn {
 
     /**
      * These are the packets that have been sent and are waiting for a response.
+     * 这些是已经发送并正在等待响应的数据包。
      */
     private final Queue<Packet> pendingQueue = new ArrayDeque<>();
 
     /**
      * These are the packets that need to be sent.
+     * 这些是需要发送的数据包。
      */
     private final LinkedBlockingDeque<Packet> outgoingQueue = new LinkedBlockingDeque<Packet>();
 
@@ -166,6 +170,7 @@ public class ClientCnxn {
 
     private final int sessionTimeout;
 
+    //watch监听管理
     private final ZKWatchManager watchManager;
 
     private long sessionId;
@@ -182,8 +187,10 @@ public class ClientCnxn {
 
     final String chrootPath;
 
+    //负责网络的连接和读取操作
     final SendThread sendThread;
 
+    //负责对事件的处理
     final EventThread eventThread;
 
     /**
@@ -871,6 +878,7 @@ public class ClientCnxn {
         private final ClientCnxnSocket clientCnxnSocket;
         private boolean isFirstConnect = true;
 
+        //读取响应数据
         void readResponse(ByteBuffer incomingBuffer) throws IOException {
             ByteBufferInputStream bbis = new ByteBufferInputStream(incomingBuffer);
             BinaryInputArchive bbia = BinaryInputArchive.getArchive(bbis);
@@ -1008,6 +1016,7 @@ public class ClientCnxn {
                 clientCnxnSocket.getRemoteSocketAddress());
             isFirstConnect = false;
             long sessId = (seenRwServerBefore) ? sessionId : 0;
+            // 构建连接请求
             ConnectRequest conReq = new ConnectRequest(0, lastZxid, sessionTimeout, sessId, sessionPasswd);
             // We add backwards since we are pushing into the front
             // Only send if there's a pending watch
@@ -1088,6 +1097,7 @@ public class ClientCnxn {
                         null,
                         null));
             }
+            // 把连接请求放入队列中，outgoingQueue 是一个 LinkedList 队列，持有发送且还没有被响应的请求
             outgoingQueue.addFirst(new Packet(null, null, conReq, null, null, readOnly));
             clientCnxnSocket.connectionPrimed();
             LOG.debug("Session establishment request sent on {}", clientCnxnSocket.getRemoteSocketAddress());
@@ -1128,9 +1138,15 @@ public class ClientCnxn {
         // throws a LoginException: see startConnect() below.
         private boolean saslLoginFailed = false;
 
+        /**
+         * 启动连接
+         * @param addr
+         * @throws IOException
+         */
         private void startConnect(InetSocketAddress addr) throws IOException {
             // initializing it for new connection
             saslLoginFailed = false;
+            //是否为首次登录
             if (!isFirstConnect) {
                 try {
                     Thread.sleep(ThreadLocalRandom.current().nextLong(1000));
@@ -1138,10 +1154,12 @@ public class ClientCnxn {
                     LOG.warn("Unexpected exception", e);
                 }
             }
+            //判断是否连接中断后重新连接，修改状态为连接中
             changeZkState(States.CONNECTING);
 
             String hostPort = addr.getHostString() + ":" + addr.getPort();
             MDC.put("myid", hostPort);
+            //设置连接名称
             setName(getName().replaceAll("\\(.*\\)", "(" + hostPort + ")"));
             if (clientConfig.isSaslClientEnabled()) {
                 try {
@@ -1164,6 +1182,7 @@ public class ClientCnxn {
             }
             logStartConnect(addr);
 
+            //使用套接字建立连接
             clientCnxnSocket.connect(addr);
         }
 
@@ -1176,17 +1195,24 @@ public class ClientCnxn {
 
         @Override
         public void run() {
+            // 对 ClientCnxnSocket 对象进行一些初始化操作
             clientCnxnSocket.introduce(this, sessionId, outgoingQueue);
+            // 设置当前时间
             clientCnxnSocket.updateNow();
+            // 设置最近发送时间和心跳时间
             clientCnxnSocket.updateLastSendAndHeard();
             int to;
+            // 最近 ping 的时间
             long lastPingRwServer = Time.currentElapsedTime();
+            //时间间隔
             final int MAX_SEND_PING_INTERVAL = 10000; //10 seconds
             InetSocketAddress serverAddress = null;
             while (state.isAlive()) {
                 try {
+                    // 如果还没有建立连接
                     if (!clientCnxnSocket.isConnected()) {
                         // don't re-establish connection if we are closing
+                        //正在关闭时不建立连接
                         if (closing) {
                             break;
                         }
@@ -1194,13 +1220,17 @@ public class ClientCnxn {
                             serverAddress = rwServerAddress;
                             rwServerAddress = null;
                         } else {
+                            //获取某个连接地址
                             serverAddress = hostProvider.next(1000);
                         }
+                        //没有用到
                         onConnecting(serverAddress);
+                        //开始连接
                         startConnect(serverAddress);
                         clientCnxnSocket.updateLastSendAndHeard();
                     }
 
+                    // 已经建立连接
                     if (state.isConnected()) {
                         // determine whether we need to send an AuthFailed event.
                         if (zooKeeperSaslClient != null) {
@@ -1247,6 +1277,7 @@ public class ClientCnxn {
                         LOG.warn(warnInfo);
                         throw new SessionTimeoutException(warnInfo);
                     }
+                    //无验证的普通连接
                     if (state.isConnected()) {
                         //1000(1 second) is to prevent race condition missing to send the second ping
                         //also make sure not to send too many pings when readTimeout is small
@@ -1255,6 +1286,7 @@ public class ClientCnxn {
                                              - ((clientCnxnSocket.getIdleSend() > 1000) ? 1000 : 0);
                         //send a ping request either time is due or no packet sent out within MAX_SEND_PING_INTERVAL
                         if (timeToNextPing <= 0 || clientCnxnSocket.getIdleSend() > MAX_SEND_PING_INTERVAL) {
+                            //发送心跳
                             sendPing();
                             clientCnxnSocket.updateLastSend();
                         } else {
@@ -1277,6 +1309,7 @@ public class ClientCnxn {
                         to = Math.min(to, pingRwTimeout - idlePingRwServer);
                     }
 
+                    //上述代码执行完后，客户端还是连接状态，需要传输数据
                     clientCnxnSocket.doTransport(to, pendingQueue, ClientCnxn.this);
                 } catch (Throwable e) {
                     if (closing) {
