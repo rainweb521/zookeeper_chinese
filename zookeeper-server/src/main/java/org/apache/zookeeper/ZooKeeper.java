@@ -278,6 +278,7 @@ public class ZooKeeper implements AutoCloseable {
          * Register the watcher with the set of watches on path.
          * @param rc the result code of the operation that attempted to
          * add the watch on the path.
+         *  客户端将之前暂时保存的Watcher对象转交给ZKWatchManager
          */
         public void register(int rc) {
             if (shouldAddWatch(rc)) {
@@ -1948,6 +1949,7 @@ public class ZooKeeper implements AutoCloseable {
      * @throws KeeperException If the server signals an error with a non-zero error code
      * @throws InterruptedException If the server transaction is interrupted.
      * @throws IllegalArgumentException if an invalid path is specified
+     * 获取数据的同时，注册watcher进行监听
      */
     public byte[] getData(final String path, Watcher watcher, Stat stat) throws KeeperException, InterruptedException {
         final String clientPath = path;

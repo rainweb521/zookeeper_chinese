@@ -25,6 +25,9 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import org.apache.yetus.audience.InterfaceAudience;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +38,7 @@ public class ServerAdminClient {
     private static final Logger LOG = LoggerFactory.getLogger(ServerAdminClient.class);
 
     public static void ruok(String host, int port) {
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
         Socket s = null;
         try {
             byte[] reqBytes = new byte[4];

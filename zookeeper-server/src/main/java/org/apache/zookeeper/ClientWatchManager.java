@@ -35,6 +35,7 @@ public interface ClientWatchManager {
      * @param type event type
      * @param path event path
      * @return may be empty set but must not be null
+     * 根据传入的通知和事件来返回Watcher
      */
     Set<Watcher> materialize(Watcher.Event.KeeperState state, Watcher.Event.EventType type, String path);
 

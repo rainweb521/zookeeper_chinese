@@ -28,12 +28,17 @@ import org.apache.zookeeper.proto.WatcherEvent;
  *  is able to respond to.  The WatchedEvent includes exactly what happened,
  *  the current state of the ZooKeeper, and the path of the znode that
  *  was involved in the event.
+ *  标准的事件处理器，定义了事件通知相关的逻辑
+ *  这里包装了Watcher通知的状态和时间类型枚举类
  */
 @InterfaceAudience.Public
 public class WatchedEvent {
 
+    //通知状态
     private final KeeperState keeperState;
+    //事件类型
     private final EventType eventType;
+    //节点路径
     private String path;
 
     /**
@@ -73,6 +78,8 @@ public class WatchedEvent {
 
     /**
      *  Convert WatchedEvent to type that can be sent over network
+     *  这里调用方法将包装成一个可序列化的WatcherEvent事件，以便通过网络传输到客户端
+     *  客户端接收到事件对象后，将WatcherEvent还原成WatchedEvent事件，并传递给process处理
      */
     public WatcherEvent getWrapper() {
         return new WatcherEvent(eventType.getIntValue(), keeperState.getIntValue(), path);

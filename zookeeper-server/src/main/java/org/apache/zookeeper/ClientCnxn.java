@@ -170,7 +170,7 @@ public class ClientCnxn {
 
     private final int sessionTimeout;
 
-    //watch监听管理
+    //watch监听管理，针对客户端的watche类型
     private final ZKWatchManager watchManager;
 
     private long sessionId;
@@ -743,6 +743,12 @@ public class ClientCnxn {
     }
 
     // @VisibleForTesting
+
+    /**
+     * SendThread线程的readResponse方法负责接收服务端的响应，
+     * 在调用该方法来从packet中提取出对应的watcher注册到ZKWatchManager中
+     * @param p
+     */
     protected void finishPacket(Packet p) {
         int err = p.replyHeader.getErr();
         if (p.watchRegistration != null) {

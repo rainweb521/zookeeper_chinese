@@ -410,7 +410,9 @@ public class ZooKeeperMain {
             return false;
         }
 
+
         // execute from commandMap
+        //执行命令
         CliCommand cliCmd = commandMapCli.get(cmd);
         if (cliCmd != null) {
             cliCmd.setZk(zk);
