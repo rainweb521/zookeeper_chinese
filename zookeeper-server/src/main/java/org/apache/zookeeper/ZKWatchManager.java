@@ -340,6 +340,8 @@ class ZKWatchManager implements ClientWatchManager {
     /* (non-Javadoc)
      * @see org.apache.zookeeper.ClientWatchManager#materialize(Event.KeeperState,
      *                                                        Event.EventType, java.lang.String)
+     *
+     * 查询对应注册的watcher事件，然后删除掉
      */
     @Override
     public Set<Watcher> materialize(
@@ -404,6 +406,7 @@ class ZKWatchManager implements ClientWatchManager {
             synchronized (existWatches) {
                 addTo(existWatches.remove(clientPath), result);
             }
+            //3.6版本之后新加的持久化watcher
             addPersistentWatches(clientPath, result);
             break;
         case NodeChildrenChanged:

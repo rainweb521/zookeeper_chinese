@@ -26,6 +26,9 @@ import java.util.Map;
 import org.apache.yetus.audience.InterfaceAudience;
 
 @SuppressWarnings("serial")
+/**
+ * 记录所有的错误码
+ */
 @InterfaceAudience.Public
 public abstract class KeeperException extends Exception {
 

@@ -487,6 +487,9 @@ public class ClientCnxn {
         return Thread.currentThread() instanceof EventThread;
     }
 
+    /**
+     * 客户端专门用来处理服务端通知的线程
+     */
     class EventThread extends ZooKeeperThread {
 
         private final LinkedBlockingQueue<Object> waitingEvents = new LinkedBlockingQueue<Object>();
@@ -505,6 +508,11 @@ public class ClientCnxn {
             setDaemon(true);
         }
 
+        /**
+         * Sendthread接收到服务端的通知事件后,
+         * 会通过调用Eventthread.queueevent方法将事件传给 Eventthread线程
+         * @param event
+         */
         public void queueEvent(WatchedEvent event) {
             queueEvent(event, null);
         }

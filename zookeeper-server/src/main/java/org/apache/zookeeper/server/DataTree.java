@@ -91,6 +91,14 @@ import org.slf4j.LoggerFactory;
  * The tree maintains two parallel data structures: a hashtable that maps from
  * full paths to DataNodes and a tree of DataNodes. All accesses to a path is
  * through the hashtable. The tree is traversed only when serializing to disk.
+ *
+ * *此类维护树数据结构。它没有任何网络
+ * *或客户端连接代码，以便可以在独立的
+ * *是的。
+ * *<p>
+ * *树维护两个并行数据结构：一个从
+ *  数据节点的完整路径和数据节点树。对路径的所有访问都是
+ * *通过哈希表。只有序列化到磁盘时才遍历树。
  */
 public class DataTree {
 
