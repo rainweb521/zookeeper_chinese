@@ -142,6 +142,9 @@ import org.slf4j.LoggerFactory;
  * signature for backwards compatibility purposes.
  */
 @SuppressWarnings("try")
+/**
+ * 客户端启动
+ */
 @InterfaceAudience.Public
 public class ZooKeeper implements AutoCloseable {
 
