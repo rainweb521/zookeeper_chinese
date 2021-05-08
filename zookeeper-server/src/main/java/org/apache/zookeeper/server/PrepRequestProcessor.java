@@ -89,6 +89,13 @@ import org.slf4j.LoggerFactory;
  * state of the system. It counts on ZooKeeperServer to update
  * outstandingRequests, so that it can take into account transactions that are
  * in the queue to be applied when generating a transaction.
+ * PrepRequestProcessor是请求处理器责任链的第一个处理器，
+ * 在 Zoo Keeper中,我们将那些会改变服务器状态的请求称为事务请求”一通常指的就是那些创建节点、
+ * 更新数据、删除节点以及创建会话等请求,
+ * Preprequestprocessor能够识别出当前客户端请求是否是事务请求。
+ * 对于事务请求, Preprequestprocessor处理器会对其进行一系列预处理,
+ * 诸如创建请求事务头、事务体,会话检査、ACL检査和版本检査等。
+ * *
  */
 public class PrepRequestProcessor extends ZooKeeperCriticalThread implements RequestProcessor {
 

@@ -38,6 +38,10 @@ import org.slf4j.LoggerFactory;
 /**
  * This class manages watches. It allows watches to be associated with a string
  * and removes watchers and their watches in addition to managing triggers.
+ *
+ * 管理触发器，内部存储watchTable和watch2Paths两个数据结构
+ * watchable是从数据节点路径的粒度来托管Watcher
+ * watch2 Paths是从 Watcher的粒度来控制事件触发需要触发的数据节点。
  */
 public class WatchManager implements IWatchManager {
 
@@ -114,6 +118,13 @@ public class WatchManager implements IWatchManager {
         }
     }
 
+    /**
+     * 调用该方法来触发watch的通知
+     * @param path znode path
+     * @param type the watch event type
+     *
+     * @return
+     */
     @Override
     public WatcherOrBitSet triggerWatch(String path, EventType type) {
         return triggerWatch(path, type, null);

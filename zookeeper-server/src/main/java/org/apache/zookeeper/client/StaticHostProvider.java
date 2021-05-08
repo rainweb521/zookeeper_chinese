@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
  * present across the stack like in JVM, OS level, hardware, etc. The best we could do here is to get the most recent
  * address from the underlying system which is considered up-to-date.
  *
+ * 客户端地址列表管理
  */
 @InterfaceAudience.Public
 public final class StaticHostProvider implements HostProvider {

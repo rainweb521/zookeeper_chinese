@@ -41,6 +41,7 @@ import org.apache.yetus.audience.InterfaceAudience;
  * * A HostProvider that loads the list of Hosts from an URL or from DNS
  * * A HostProvider that re-resolves the InetSocketAddress after a timeout.
  * * A HostProvider that prefers nearby hosts.
+ * 客户端地址列表管理
  */
 @InterfaceAudience.Public
 public interface HostProvider {

@@ -48,6 +48,9 @@ import org.slf4j.LoggerFactory;
  *             It never send ack back to the leader, so the nextProcessor will
  *             be null. This change the semantic of txnlog on the observer
  *             since it only contains committed txns.
+ *
+ *  Syncrequestprocessor是事务日志记录处理器,该处理器主要用来将事务请求记录到事务日志文件中去,
+ *  同时还会触发ZooKeeper进行数据快照
  */
 public class SyncRequestProcessor extends ZooKeeperCriticalThread implements RequestProcessor {
 
