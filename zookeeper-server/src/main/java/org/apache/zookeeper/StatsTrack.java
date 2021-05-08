@@ -28,6 +28,7 @@ import org.apache.zookeeper.common.StringUtils;
 
 /**
  * a class that represents the stats associated with quotas
+ * 表示与配额相关的统计信息的类
  */
 public class StatsTrack {
 

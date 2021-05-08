@@ -100,7 +100,8 @@ import org.slf4j.MDC;
  * This class manages the socket i/o for the client. ClientCnxn maintains a list
  * of available servers to connect to and "transparently" switches servers it is
  * connected to as needed.
- * 客户端连接对象
+ * 客户端连接对象，包含两个线程，SendThread和EventThread，第一个为I/O线程，负责客户端与服务端之间的网络I/O通信
+ * EventThread是一个事件线程，负责对服务端事件进行处理
  *
  * https://blog.csdn.net/henlf/article/details/83716449?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.baidujs&dist_request_id=&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.baidujs
  */
@@ -492,6 +493,7 @@ public class ClientCnxn {
      */
     class EventThread extends ZooKeeperThread {
 
+        //EventThread待处理事件队列，存放所有等待被客户端处理的事件
         private final LinkedBlockingQueue<Object> waitingEvents = new LinkedBlockingQueue<Object>();
 
         /** This is really the queued session state until the event

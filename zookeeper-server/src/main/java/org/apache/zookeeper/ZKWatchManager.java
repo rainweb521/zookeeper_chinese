@@ -33,6 +33,8 @@ import org.slf4j.LoggerFactory;
  *
  * This class is intended to be packaged-private so that it doesn't serve
  * as part of ZooKeeper client API.
+ *
+ * 继承客户端watch管理器接口，实现相关方法
  */
 class ZKWatchManager implements ClientWatchManager {
 

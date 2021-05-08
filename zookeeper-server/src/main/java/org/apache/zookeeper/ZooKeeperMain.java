@@ -103,6 +103,7 @@ public class ZooKeeperMain {
 
     private class MyWatcher implements Watcher {
 
+        //watcher出发后的回调处理
         public void process(WatchedEvent event) {
             if (getPrintWatches()) {
                 ZooKeeperMain.printMessage("WATCHER::");
