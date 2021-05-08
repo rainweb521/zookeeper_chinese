@@ -433,6 +433,9 @@ public class Leader extends LearnerMaster {
     // VisibleForTesting
     protected final Proposal newLeaderProposal = new Proposal();
 
+    /**
+     * 负责接收所有非leader服务器的连接请求
+     */
     class LearnerCnxAcceptor extends ZooKeeperCriticalThread {
 
         private final AtomicBoolean stop = new AtomicBoolean(false);

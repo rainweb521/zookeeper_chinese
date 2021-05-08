@@ -93,7 +93,7 @@ import org.slf4j.LoggerFactory;
  * message to the tail of the queue, thus changing the order of messages.
  * Although this is not a problem for the leader election, it could be a problem
  * when consolidating peer communication. This is to be verified, though.
- *
+ * 负责各台服务器底层的leader选举的网络通信
  */
 
 public class QuorumCnxManager {
@@ -156,13 +156,17 @@ public class QuorumCnxManager {
 
     /*
      * Mapping from Peer to Thread number
+     *消息发送器，根据SID对应每台服务器
      */
     final ConcurrentHashMap<Long, SendWorker> senderWorkerMap;
+    //消息发送队列，根据SID分组，每台机器分配一个队列
     final ConcurrentHashMap<Long, BlockingQueue<ByteBuffer>> queueSendMap;
+    //最近发送过的消息队列
     final ConcurrentHashMap<Long, ByteBuffer> lastMessageSent;
 
     /*
      * Reception queue
+     * 消息接收队列
      */
     public final BlockingQueue<Message> recvQueue;
 
@@ -1145,6 +1149,7 @@ public class QuorumCnxManager {
      * Thread to send messages. Instance waits on a queue, and send a message as
      * soon as there is one available. If connection breaks, then opens a new
      * one.
+     * 消息发送器
      */
     class SendWorker extends ZooKeeperThread {
 
@@ -1327,6 +1332,7 @@ public class QuorumCnxManager {
     /**
      * Thread to receive messages. Instance waits on a socket read. If the
      * channel breaks, then removes itself from the pool of receivers.
+     * 消息接收器
      */
     class RecvWorker extends ZooKeeperThread {
 

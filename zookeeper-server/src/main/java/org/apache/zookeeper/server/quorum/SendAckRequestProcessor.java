@@ -27,6 +27,9 @@ import org.apache.zookeeper.server.ServerMetrics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 负责在follower服务器中记录事务日志反馈，向leader服务器发送ack消息表明自身完成了事务日志的记录工作
+ */
 public class SendAckRequestProcessor implements RequestProcessor, Flushable {
 
     private static final Logger LOG = LoggerFactory.getLogger(SendAckRequestProcessor.class);

@@ -20,6 +20,9 @@ package org.apache.zookeeper.server.quorum;
 
 import org.apache.zookeeper.server.quorum.QuorumPeer.ServerState;
 
+/**
+ * 投票选举的数据结构
+ */
 public class Vote {
 
     public Vote(long id, long zxid) {
@@ -69,12 +72,17 @@ public class Vote {
 
     private final int version;
 
+    //leader的SID
     private final long id;
 
+    //事务ID
     private final long zxid;
 
+    //逻辑时钟,用来判断多个投崇是否在同一轮选举周期中。
+    // 该估在服务端是一个自增序列。每次进入新一轮的投票后,都会对该値进行加1操作
     private final long electionEpoch;
 
+    //被选举的周期epoch
     private final long peerEpoch;
 
     public int getVersion() {
@@ -101,6 +109,7 @@ public class Vote {
         return state;
     }
 
+    //服务器状态
     private final ServerState state;
 
     @Override

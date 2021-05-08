@@ -111,6 +111,9 @@ import org.slf4j.LoggerFactory;
  * </pre>
  *
  * The request for the current leader will consist solely of an xid: int xid;
+ *
+ * QuorumPeer代表一个zookeeper实例，负责检测服务器运行状态，发起选举
+ *
  */
 public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider {
 
@@ -204,6 +207,12 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
         LOG.info("multiAddress.reachabilityCheckEnabled set to {}", multiAddressReachabilityCheckEnabled);
     }
 
+    /**
+     * 初始化 Quorumpeer。
+     * Quorumpeer是Zookeeperserver的托管者,因此需要将一些核心组件注册到 Quorumpeer中去,
+     * 包括 Filetxnsnaplog、Servercnxnfactory和 Zkdatabase。
+     * 同时 ZooKeeper还会对 Quorumpeer 配置一些参数,包括服务器地址列表、 Leader选举算法和会话超时时间限制等。
+     */
     public static class QuorumServer {
 
         public MultipleAddresses addr = new MultipleAddresses();

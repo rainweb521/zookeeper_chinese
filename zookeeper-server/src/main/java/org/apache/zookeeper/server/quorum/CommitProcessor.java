@@ -73,6 +73,10 @@ import org.slf4j.LoggerFactory;
  *
  * The current implementation solves the third constraint by simply allowing no
  * read requests to be processed in parallel with write requests.
+ *
+ * Commitprocessor是事务提交处理器。对于非事务请求,该处理器会直接将其交付给下一级处理器进行处理;
+ * 而对于事务请求, Commitprocessor处理器会等待集群内针对 Proposal的投票直到该 Proposal可被提交。
+ * 利用 Commitprocessor处理器,每个服务器都可以很好地控制对事务请求的顺序处理。
  */
 public class CommitProcessor extends ZooKeeperCriticalThread implements RequestProcessor {
 

@@ -215,6 +215,12 @@ public class FastLeaderElection implements Election {
         /**
          * Receives messages from instance of QuorumCnxManager on
          * method run(), and processes such messages.
+         * 选票接收器，该接收器会不断地从 Quorumcnxmanager中获取出其他服务器发来的选举消息,
+         * 并将其转换成一个选票,然后保存到requeue队列中去。
+         * 在选票的接收过程中,如果发现该外部投票的选举轮次小于当前服务器,
+         * 那么就直接忽略这个外部投票,同时立即发出自己的内部投票。
+         * 当然,如果当前服务器并不是 LOOKING状态,即已经选举出了 Leader,那么也将忽略这个外部投票,
+         * 同时将 Leader信息以投票的形式发送出去。
          */
 
         class WorkerReceiver extends ZooKeeperThread {
@@ -477,6 +483,7 @@ public class FastLeaderElection implements Election {
         /**
          * This worker simply dequeues a message to send and
          * and queues it on the manager's queue.
+         * 选票发送
          */
 
         class WorkerSender extends ZooKeeperThread {
@@ -717,7 +724,7 @@ public class FastLeaderElection implements Election {
     /**
      * Check if a pair (server id, zxid) succeeds our
      * current vote.
-     *
+     * 对投票选举情况进行处理
      */
     protected boolean totalOrderPredicate(long newId, long newZxid, long newEpoch, long curId, long curZxid, long curEpoch) {
         LOG.debug(
